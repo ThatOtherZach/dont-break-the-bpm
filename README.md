@@ -1,51 +1,92 @@
 # BreakBPM
 
-**Pool & billiards scoring with live Balls-Per-Minute (BPM) tracking.**
+**A retro Windows 98-style pool & billiards scorer with live Balls-Per-Minute (BPM) tracking.**
 
-From the opening break to the final 8-ball (or 9), measure your pace, log every shot, play casual games with up to 4 friends via instant shareable links, or grind solo practice.
+From the opening break to the final 8-ball — log every shot, watch your pace, play with friends via 4-digit code or shareable link, or grind solo practice.
 
 > *"BreakBPM — the score that starts at the break and ends when you win."*
 
-## ✨ Features
+## Current Version: v0.4 (Windows 98 Edition)
 
-- **Up to 4 players** – Shareable link with live game state (real-time rooms coming soon)
-- **Shot tracking** – Potted ball, Win Rack, Miss, Foul, Safety
-- **Live BPM** – Balls potted per minute + session timer
-- **Practice mode** – Solo drills & pace training
-- **Game types** – 8-ball, 9-ball, custom race-to-X
-- **Mobile-first UI** – Felt-green theme, big buttons, confetti on wins
-- **Zero friction** – Works in any browser
+This is a **single-file web app** (`index.html`) that feels like a genuine 1998 Windows program.
 
-## 🚀 Play Now
+### Key Features
+- **Full Windows 98 UI** — Classic gray 3D windows, navy title bars, inset/outset borders, MS Sans Serif font, teal desktop background.
+- **Simplified ball system** — Balls shown as `(1)(3)(8)(2)` text (no emojis).
+- **Smart ball selector** — Only shows legal/available balls based on game rules and what’s already sunk.
+- **Ball Return terminal** — Green-on-black readout showing sunk balls in chronological order.
+- **8-Ball & 9-Ball support** — Proper win conditions (must clear your group before 8-ball; 9-ball wins on the 9).
+- **Team assignment** — Solids vs Stripes for 8-ball games.
+- **4-digit share code** — Easy-to-say code (e.g. `K7P2`) + full URL with game state.
+- **Live BPM + Timer** — Calculated from actual sunk balls over game duration.
+- **Multiplayer (async)** — Share the link or code; state travels with the URL.
+- **Practice Mode** — Solo drills with unlimited racks.
+- **Undo, fouls, safeties, shot log** — Full action history.
 
-Open `index.html` in your browser (or deploy to GitHub Pages). Start a game and share the URL – friends see the exact same scores and BPM instantly.
+## How to Run
 
-## 📁 What's Inside
+Just open `index.html` in any modern browser. No build step, no dependencies.
 
-- `index.html` – Complete playable app (Tailwind + vanilla JS, single file)
-- `README.md` – This file
+For best experience:
+- Deploy to GitHub Pages (Settings → Pages → Deploy from `main` branch)
+- Or run locally with Live Server extension in VS Code
 
-## 🔧 Roadmap
+## Project Structure
 
-- Firebase/Supabase real-time multiplayer rooms
-- Player history & stats
-- Stripe/crypto pay-per-game (your original idea)
-- Advanced analytics
-- PWA + offline mode
+```
+BreakBPM/
+├── index.html          # The entire app (HTML + CSS + JS)
+├── README.md           # This file
+├── SCHEMA.md           # Data model & future backend plan
+└── (no other files yet)
+```
 
-## 🎯 Quick Start
+## Data Model (see SCHEMA.md for full details)
 
-1. Open `index.html`
-2. New Game or Practice Mode
-3. Add names, pick race length
-4. Shoot! Watch BPM climb
-5. Share the link with your crew
-6. First to the target racks wins → confetti party
+- **Players**: Name + optional team (solids/stripes) + stats
+- **Games**: Type (8ball/9ball), short code, status, actions[]
+- **Actions**: Every pot, miss, foul, safety, win (timestamped for accurate BPM)
 
-## 👨‍💻 Dev
+The current implementation stores everything in-memory and serializes to the URL (`?state=...`) for sharing. Ready to drop into Firebase/Supabase later with zero schema changes.
 
-Just open the HTML. No build tools needed.
+## Vision & Goals
 
-**Repo:** https://github.com/ThatOtherZach/dont-break-the-bpm
+- Make casual pool nights more fun and trackable
+- Bring back that satisfying 90s software feel
+- Keep the core loop dead simple: Start game → Assign teams → Sink balls → Watch BPM climb → Win with confetti
+- Future: Real-time multiplayer rooms, player accounts, payment integration (per-game credits), advanced stats
 
-*BreakBPM — rack 'em up and keep the pace high.* 🎱
+## What the Next Developer / AI Should Know
+
+This project was built iteratively in one long session. The UI went through several evolutions:
+1. Modern Tailwind pool-hall theme
+2. Added team assignment + ball selector
+3. Added 4-digit codes + proper win rules
+4. Full Windows 98 retro theme + simplified `(X)` ball system (current state)
+
+The ball return was specifically designed to feel like a physical pool table ball return — balls appear in order as they’re logged.
+
+Key files to edit:
+- `index.html` — everything lives here (keep it single-file for now)
+- `SCHEMA.md` — the source of truth for data model
+
+When adding features, prioritize:
+- Keeping the retro Win98 aesthetic
+- Making ball selection feel fair and rule-accurate
+- Keeping the terminal readout clean and satisfying
+
+## Roadmap (Next AI Priorities)
+
+- [ ] Real-time multiplayer (Firebase/Supabase rooms + join by code)
+- [ ] Player accounts & persistent history
+- [ ] Payment integration (Stripe / crypto per-game credits)
+- [ ] Better mobile support (current is desktop-first Win98)
+- [ ] Sound effects (classic Windows .wav clicks?)
+- [ ] Export game summary as image/PDF
+
+## Credits
+
+Built live with Grok (xAI) + connected GitHub tools.
+Original idea by @ThatOtherZach (Zachary Jordan).
+
+*Let’s keep the BreakBPM high.* 🎱
