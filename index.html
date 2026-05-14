@@ -10,13 +10,13 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         body { font-family: system-ui, -apple-system, sans-serif; }
-        .felt { background: linear-gradient(#0a3d2f, #05241c); }
-        .pool-ball { width: 38px; height: 38px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 13px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); box-shadow: 0 3px 6px -1px rgb(0 0 0 / 0.4), inset 0 2px 4px 0 rgb(255 255 255 / 0.25); }
+        .pool-ball { width: 32px; height: 32px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 11px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); box-shadow: 0 3px 6px -1px rgb(0 0 0 / 0.4), inset 0 2px 4px 0 rgb(255 255 255 / 0.25); }
         .turn-glow { box-shadow: 0 0 15px #22c55e, 0 0 30px #22c55e; }
         .action-btn { transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
         .action-btn:active { transform: scale(0.95); }
-        .ball-btn { transition: transform 0.1s; }
-        .ball-btn:active { transform: scale(0.9); }
+        .ball-return { background: linear-gradient(#05241c, #0a3d2f); border: 3px solid #166534; }
+        .sunk-ball { animation: rollIn 0.4s ease-out forwards; }
+        @keyframes rollIn { from { transform: translateX(40px) scale(0.6); opacity: 0; } to { transform: translateX(0) scale(1); opacity: 1; } }
     </style>
 </head>
 <body class="bg-zinc-950 text-zinc-200">
@@ -31,12 +31,10 @@
                 </div>
             </div>
             <div class="flex items-center gap-x-2">
-                <button onclick="showNewGameModal()" 
-                        class="px-5 py-2.5 bg-white text-zinc-950 font-semibold rounded-2xl text-sm flex items-center gap-x-2 hover:bg-zinc-100 transition-colors">
+                <button onclick="showNewGameModal()" class="px-5 py-2.5 bg-white text-zinc-950 font-semibold rounded-2xl text-sm flex items-center gap-x-2 hover:bg-zinc-100 transition-colors">
                     <i class="fa-solid fa-plus mr-1"></i> <span class="font-bold">New Game</span>
                 </button>
-                <button onclick="togglePracticeMode()" 
-                        class="px-4 py-2.5 border border-zinc-700 hover:bg-zinc-900 rounded-2xl text-sm flex items-center gap-x-2 transition-colors" id="practice-btn">
+                <button onclick="togglePracticeMode()" class="px-4 py-2.5 border border-zinc-700 hover:bg-zinc-900 rounded-2xl text-sm flex items-center gap-x-2 transition-colors" id="practice-btn">
                     <i class="fa-solid fa-user"></i> <span>Practice</span>
                 </button>
             </div>
@@ -50,7 +48,7 @@
                 <i class="fa-solid fa-play text-5xl text-emerald-500"></i>
             </div>
             <h2 class="text-4xl font-bold mb-3">Ready to break?</h2>
-            <p class="text-zinc-400 mb-8">Start a new game or solo practice.<br>Share the 4-digit code or link with friends.</p>
+            <p class="text-zinc-400 mb-8">Start a new game or solo practice.<br>Share the 4-digit code or link.</p>
             
             <div class="flex flex-col gap-3 max-w-xs mx-auto">
                 <button onclick="showNewGameModal()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 transition-colors text-white font-bold rounded-3xl flex items-center justify-center gap-x-3 text-lg">
@@ -98,8 +96,30 @@
                 </div>
             </div>
 
-            <!-- Players -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="players-grid"></div>
+            <!-- Main Content: Players + Ball Return -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+                <!-- Players / Scores -->
+                <div class="lg:col-span-3">
+                    <div class="flex items-center gap-x-2 mb-3 px-1">
+                        <i class="fa-solid fa-tachometer-alt text-emerald-400"></i>
+                        <span class="font-semibold">SCORES & ACTIONS</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="players-grid"></div>
+                </div>
+
+                <!-- Ball Return (L-shape inspired) -->
+                <div class="lg:col-span-2">
+                    <div class="flex items-center gap-x-2 mb-3 px-1">
+                        <i class="fa-solid fa-arrow-down text-emerald-400"></i>
+                        <span class="font-semibold">BALL RETURN</span>
+                        <span class="text-xs text-zinc-500 ml-auto">(sunk in order)</span>
+                    </div>
+                    <div id="ball-return" class="ball-return min-h-[92px] rounded-3xl p-3 flex flex-wrap gap-2 items-center border border-emerald-900/50 overflow-hidden">
+                        <!-- Sunk balls appended here dynamically -->
+                    </div>
+                    <div class="text-[10px] text-center text-zinc-500 mt-1">Balls roll in here as they're logged</div>
+                </div>
+            </div>
 
             <!-- Action Panel -->
             <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 mb-6">
@@ -138,48 +158,31 @@
                 </div>
             </div>
 
-            <!-- Log + Share -->
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                <div class="lg:col-span-3 bg-zinc-900 border border-zinc-800 rounded-3xl p-4">
-                    <div class="flex items-center justify-between mb-3 px-1">
-                        <div class="font-semibold flex items-center gap-x-2">
-                            <i class="fa-solid fa-list text-emerald-400"></i> <span>SHOT LOG</span>
-                        </div>
-                        <button onclick="undoLastAction()" class="text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex items-center gap-x-1">
-                            <i class="fa-solid fa-undo"></i> <span>Undo</span>
-                        </button>
+            <!-- Shot Log -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-4">
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <div class="font-semibold flex items-center gap-x-2">
+                        <i class="fa-solid fa-list text-emerald-400"></i> <span>RECENT SHOTS</span>
                     </div>
-                    <div id="shot-log" class="h-48 overflow-y-auto text-sm space-y-1 pr-2 custom-scroll"></div>
-                </div>
-
-                <div class="lg:col-span-2 flex flex-col gap-3">
-                    <button onclick="shareLink()" class="flex-1 bg-white text-zinc-950 hover:bg-zinc-100 transition-colors font-bold rounded-3xl flex items-center justify-center gap-x-3 text-base">
-                        <i class="fa-solid fa-share-alt"></i> <span>SHARE LINK + CODE</span>
-                    </button>
-                    <button onclick="endGame()" class="flex-1 border border-red-500/50 hover:bg-red-950/50 text-red-400 font-semibold rounded-3xl flex items-center justify-center gap-x-3 text-sm py-3">
-                        <i class="fa-solid fa-flag-checkered"></i> <span>END GAME EARLY</span>
+                    <button onclick="undoLastAction()" class="text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex items-center gap-x-1">
+                        <i class="fa-solid fa-undo"></i> <span>Undo</span>
                     </button>
                 </div>
+                <div id="shot-log" class="h-32 overflow-y-auto text-sm space-y-1 pr-2 custom-scroll"></div>
             </div>
         </div>
     </div>
 
-    <!-- New Game Modal -->
+    <!-- Modals (New Game, Ball Selector, Win) - same as before, kept for brevity -->
     <div id="new-game-modal" onclick="if (event.target.id === 'new-game-modal') hideNewGameModal()" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div onclick="event.stopImmediatePropagation()" class="bg-zinc-900 border border-zinc-700 w-full max-w-md rounded-3xl p-6">
-            <h3 class="text-2xl font-bold mb-6 flex items-center gap-x-3">
-                <i class="fa-solid fa-play"></i> <span>New Game</span>
-            </h3>
-            
+            <h3 class="text-2xl font-bold mb-6 flex items-center gap-x-3"><i class="fa-solid fa-play"></i> <span>New Game</span></h3>
             <div class="space-y-5">
                 <div>
                     <label class="block text-xs font-medium text-zinc-400 mb-2">PLAYERS (1-4)</label>
                     <div id="player-inputs" class="space-y-2"></div>
-                    <button onclick="addPlayerInput()" class="mt-2 text-emerald-400 text-sm flex items-center gap-x-1 hover:text-emerald-300">
-                        <i class="fa-solid fa-plus-circle"></i> <span>Add Player</span>
-                    </button>
+                    <button onclick="addPlayerInput()" class="mt-2 text-emerald-400 text-sm flex items-center gap-x-1 hover:text-emerald-300"><i class="fa-solid fa-plus-circle"></i> <span>Add Player</span></button>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-medium text-zinc-400 mb-1.5">GAME TYPE</label>
@@ -197,14 +200,11 @@
                         </select>
                     </div>
                 </div>
-
-                <!-- Team Assignment (shown only for 8-ball) -->
                 <div id="team-assignment-section" class="hidden">
                     <label class="block text-xs font-medium text-zinc-400 mb-2">TEAM ASSIGNMENT (8-BALL)</label>
                     <div id="team-assignments" class="space-y-2 text-sm"></div>
                 </div>
             </div>
-
             <div class="flex gap-3 mt-8">
                 <button onclick="hideNewGameModal()" class="flex-1 py-3.5 border border-zinc-700 rounded-2xl font-semibold">Cancel</button>
                 <button onclick="startNewGame()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-500 transition-colors rounded-2xl font-bold">Start Game</button>
@@ -212,7 +212,6 @@
         </div>
     </div>
 
-    <!-- Ball Selector Modal -->
     <div id="ball-selector-modal" onclick="if (event.target.id === 'ball-selector-modal') hideBallSelector()" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
         <div onclick="event.stopImmediatePropagation()" class="bg-zinc-900 border border-zinc-700 w-full max-w-sm rounded-3xl p-6">
             <h3 class="text-xl font-bold mb-4 text-center">Select Ball Sunk</h3>
@@ -221,27 +220,22 @@
         </div>
     </div>
 
-    <!-- Win Modal -->
     <div id="win-modal" onclick="if (event.target.id === 'win-modal') hideWinModal()" class="hidden fixed inset-0 bg-black/90 z-[110] flex items-center justify-center p-4">
         <div onclick="event.stopImmediatePropagation()" class="bg-zinc-900 border border-emerald-600 w-full max-w-sm rounded-3xl p-8 text-center">
             <div class="text-7xl mb-4">🏆</div>
             <h2 class="text-4xl font-bold mb-2" id="winner-name"></h2>
             <p class="text-emerald-400 mb-6">WINS THE MATCH!</p>
-            
             <div class="bg-zinc-950 rounded-2xl p-4 mb-6 text-left text-sm">
                 <div class="flex justify-between py-1.5 border-b border-zinc-800"><span class="text-zinc-400">Final BreakBPM</span> <span id="final-bpm" class="font-mono font-bold"></span></div>
                 <div class="flex justify-between py-1.5 border-b border-zinc-800"><span class="text-zinc-400">Total Time</span> <span id="final-time" class="font-mono font-bold"></span></div>
                 <div class="flex justify-between py-1.5"><span class="text-zinc-400">Balls Potted</span> <span id="final-balls" class="font-mono font-bold"></span></div>
             </div>
-
             <button onclick="startNewGameFromWin()" class="w-full py-4 bg-white text-zinc-950 font-bold rounded-2xl">Play Again</button>
             <button onclick="hideWinModal()" class="mt-3 text-sm text-zinc-400 hover:text-zinc-200">Close</button>
         </div>
     </div>
 
-    <footer class="text-center py-8 text-xs text-zinc-500">
-        BreakBPM v0.2 • Built with Grok • <a href="https://github.com/ThatOtherZach/dont-break-the-bpm" class="hover:text-zinc-300">GitHub</a>
-    </footer>
+    <footer class="text-center py-8 text-xs text-zinc-500">BreakBPM v0.3 • Ball Return UI • Built with Grok</footer>
 
     <script>
         let gameState = null;
@@ -250,9 +244,7 @@
         function generateShortCode() {
             const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
             let code = '';
-            for (let i = 0; i < 4; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
+            for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
             return code;
         }
 
@@ -306,10 +298,7 @@
             if (container.children.length >= 4) { alert('Max 4 players!'); return; }
             const div = document.createElement('div');
             div.className = 'flex gap-2';
-            div.innerHTML = `
-                <input type="text" value="${defaultName}" placeholder="Player name" class="flex-1 bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500">
-                <button type="button" onclick="this.parentElement.remove(); updateTeamAssignmentUI()" class="px-3 text-red-400 hover:text-red-300"><i class="fa-solid fa-times"></i></button>
-            `;
+            div.innerHTML = `<input type="text" value="${defaultName}" placeholder="Player name" class="flex-1 bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500"><button type="button" onclick="this.parentElement.remove(); updateTeamAssignmentUI()" class="px-3 text-red-400 hover:text-red-300"><i class="fa-solid fa-times"></i></button>`;
             container.appendChild(div);
             updateTeamAssignmentUI();
         }
@@ -319,25 +308,14 @@
             const gameType = document.getElementById('game-type').value;
             const container = document.getElementById('team-assignments');
             container.innerHTML = '';
-
-            if (gameType !== '8ball') {
-                section.classList.add('hidden');
-                return;
-            }
+            if (gameType !== '8ball') { section.classList.add('hidden'); return; }
             section.classList.remove('hidden');
-
             const inputs = document.querySelectorAll('#player-inputs input');
             inputs.forEach((input, i) => {
                 const name = input.value.trim() || `Player ${i+1}`;
                 const row = document.createElement('div');
                 row.className = 'flex items-center justify-between bg-zinc-800 rounded-2xl px-4 py-2';
-                row.innerHTML = `
-                    <span class="font-medium">${name}</span>
-                    <select class="team-select bg-zinc-700 border border-zinc-600 rounded-xl px-3 py-1 text-sm" data-player-index="${i}">
-                        <option value="solids">Solids (1-7)</option>
-                        <option value="stripes">Stripes (9-15)</option>
-                    </select>
-                `;
+                row.innerHTML = `<span class="font-medium">${name}</span><select class="team-select bg-zinc-700 border border-zinc-600 rounded-xl px-3 py-1 text-sm" data-player-index="${i}"><option value="solids">Solids (1-7)</option><option value="stripes">Stripes (9-15)</option></select>`;
                 container.appendChild(row);
             });
         }
@@ -346,7 +324,6 @@
             const inputs = document.querySelectorAll('#player-inputs input');
             const gameType = document.getElementById('game-type').value;
             const raceTo = parseInt(document.getElementById('race-to').value);
-
             const players = Array.from(inputs).map((input, i) => {
                 const name = input.value.trim() || `Player ${i+1}`;
                 let team = null;
@@ -354,70 +331,20 @@
                     const select = document.querySelector(`.team-select[data-player-index="${i}"]`);
                     team = select ? select.value : (i % 2 === 0 ? 'solids' : 'stripes');
                 }
-                return {
-                    id: Date.now() + i,
-                    name,
-                    position: i + 1,
-                    team,
-                    ballsPotted: [],
-                    fouls: 0,
-                    safeties: 0,
-                    color: ['#ef4444', '#3b82f6', '#eab308', '#a855f7'][i % 4]
-                };
+                return { id: Date.now() + i, name, position: i + 1, team, ballsPotted: [], fouls: 0, safeties: 0, color: ['#ef4444', '#3b82f6', '#eab308', '#a855f7'][i % 4] };
             }).filter(p => p.name);
-
             if (players.length === 0) { alert('Add at least one player!'); return; }
-
-            gameState = {
-                shortCode: generateShortCode(),
-                players,
-                currentPlayer: 0,
-                raceTo,
-                gameType,
-                startTime: Date.now(),
-                paused: false,
-                totalBalls: 0,
-                elapsed: 0,
-                logs: [],
-                turnBalls: 0,
-                isPractice: false,
-                actions: []
-            };
-
+            gameState = { shortCode: generateShortCode(), players, currentPlayer: 0, raceTo, gameType, startTime: Date.now(), paused: false, totalBalls: 0, elapsed: 0, logs: [], turnBalls: 0, isPractice: false, actions: [] };
             hideNewGameModal();
             document.getElementById('idle-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
-
             updateUI();
             startTimer();
             updateURLState();
         }
 
         function startPracticeMode() {
-            gameState = {
-                shortCode: generateShortCode(),
-                players: [{
-                    id: Date.now(),
-                    name: 'You (Practice)',
-                    position: 1,
-                    team: null,
-                    ballsPotted: [],
-                    fouls: 0,
-                    safeties: 0,
-                    color: '#22c55e'
-                }],
-                currentPlayer: 0,
-                raceTo: 999,
-                gameType: 'practice',
-                startTime: Date.now(),
-                paused: false,
-                totalBalls: 0,
-                elapsed: 0,
-                logs: [],
-                turnBalls: 0,
-                isPractice: true,
-                actions: []
-            };
+            gameState = { shortCode: generateShortCode(), players: [{ id: Date.now(), name: 'You (Practice)', position: 1, team: null, ballsPotted: [], fouls: 0, safeties: 0, color: '#22c55e' }], currentPlayer: 0, raceTo: 999, gameType: 'practice', startTime: Date.now(), paused: false, totalBalls: 0, elapsed: 0, logs: [], turnBalls: 0, isPractice: true, actions: [] };
             document.getElementById('idle-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
             document.getElementById('practice-btn').classList.add('!bg-emerald-600', '!text-white');
@@ -426,10 +353,7 @@
             updateURLState();
         }
 
-        function togglePracticeMode() {
-            if (gameState && gameState.isPractice) endGame();
-            else startPracticeMode();
-        }
+        function togglePracticeMode() { if (gameState && gameState.isPractice) endGame(); else startPracticeMode(); }
 
         function startTimer() {
             if (timerInterval) clearInterval(timerInterval);
@@ -438,8 +362,7 @@
                 const now = Date.now();
                 gameState.elapsed = Math.floor((now - gameState.startTime) / 1000);
                 const minutes = gameState.elapsed / 60 || 1;
-                const bpm = (gameState.totalBalls / minutes).toFixed(1);
-                document.getElementById('bpm-value').textContent = bpm;
+                document.getElementById('bpm-value').textContent = (gameState.totalBalls / minutes).toFixed(1);
                 const mins = Math.floor(gameState.elapsed / 60);
                 const secs = gameState.elapsed % 60;
                 document.getElementById('timer-value').textContent = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
@@ -450,15 +373,8 @@
             if (!gameState) return;
             gameState.paused = !gameState.paused;
             const btn = document.getElementById('timer-btn');
-            if (gameState.paused) {
-                btn.innerHTML = '<i class="fa-solid fa-play"></i>';
-                btn.classList.add('!bg-emerald-600', '!text-white');
-            } else {
-                btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-                btn.classList.remove('!bg-emerald-600', '!text-white');
-                gameState.startTime = Date.now() - (gameState.elapsed * 1000);
-                startTimer();
-            }
+            if (gameState.paused) { btn.innerHTML = '<i class="fa-solid fa-play"></i>'; btn.classList.add('!bg-emerald-600', '!text-white'); }
+            else { btn.innerHTML = '<i class="fa-solid fa-pause"></i>'; btn.classList.remove('!bg-emerald-600', '!text-white'); gameState.startTime = Date.now() - (gameState.elapsed * 1000); startTimer(); }
             updateURLState();
         }
 
@@ -482,12 +398,11 @@
                             <div class="pool-ball text-xs" style="background: ${player.color}">${player.position}</div>
                             <div>
                                 <div class="font-bold">${player.name}</div>
-                                <div class="text-xs text-zinc-500">${teamLabel} • ${player.fouls} fouls</div>
+                                <div class="text-xs text-zinc-500">${teamLabel} • ${player.fouls} fouls • ${player.ballsPotted.length} balls</div>
                             </div>
                         </div>
                         <div class="text-right">
                             <div class="text-5xl font-bold tabular-nums leading-none" style="color: ${player.color}">${player.ballsPotted.length}</div>
-                            <div class="text-[10px] -mt-1 text-zinc-500">BALLS</div>
                         </div>
                     </div>
                     ${isCurrent ? `<div class="mt-3 pt-3 border-t border-zinc-800"><div class="px-2.5 py-1 bg-emerald-900/50 text-emerald-400 rounded-xl text-center text-xs font-mono">YOUR TURN</div></div>` : ''}
@@ -495,30 +410,51 @@
                 grid.appendChild(card);
             });
 
-            if (gameState.players[gameState.currentPlayer]) {
-                document.getElementById('current-player-name').textContent = gameState.players[gameState.currentPlayer].name;
-            }
+            if (gameState.players[gameState.currentPlayer]) document.getElementById('current-player-name').textContent = gameState.players[gameState.currentPlayer].name;
             document.getElementById('turn-balls').textContent = gameState.turnBalls || 0;
+
+            // Update Ball Return
+            updateBallReturn();
 
             const logEl = document.getElementById('shot-log');
             logEl.innerHTML = '';
-            if (gameState.logs.length === 0) {
-                logEl.innerHTML = `<div class="text-center py-8 text-zinc-500 text-xs">No shots yet. Start shooting!</div>`;
-            } else {
-                gameState.logs.slice().reverse().forEach((log, i) => {
-                    const entry = document.createElement('div');
-                    entry.className = `px-3 py-1.5 rounded-2xl flex items-center gap-x-3 text-xs ${i === 0 ? 'bg-zinc-800' : ''}`;
-                    let icon = 'fa-question';
-                    if (log.type === 'pot') icon = 'fa-bowling-ball';
-                    else if (log.type === 'win') icon = 'fa-trophy';
-                    else if (log.type === 'miss') icon = 'fa-times';
-                    else if (log.type === 'foul') icon = 'fa-exclamation-triangle';
-                    else if (log.type === 'safety') icon = 'fa-shield-halved';
-                    entry.innerHTML = `<i class="fa-solid ${icon} text-emerald-400 w-4"></i> <span class="flex-1">${log.player} • ${log.message}</span> <span class="font-mono text-[10px] text-zinc-500">${log.time}</span>`;
-                    logEl.appendChild(entry);
-                });
-            }
+            if (gameState.logs.length === 0) logEl.innerHTML = `<div class="text-center py-8 text-zinc-500 text-xs">No shots yet.</div>`;
+            else gameState.logs.slice().reverse().forEach((log, i) => {
+                const entry = document.createElement('div');
+                entry.className = `px-3 py-1.5 rounded-2xl flex items-center gap-x-3 text-xs ${i === 0 ? 'bg-zinc-800' : ''}`;
+                let icon = 'fa-question';
+                if (log.type === 'pot') icon = 'fa-bowling-ball';
+                else if (log.type === 'win') icon = 'fa-trophy';
+                else if (log.type === 'miss') icon = 'fa-times';
+                else if (log.type === 'foul') icon = 'fa-exclamation-triangle';
+                else if (log.type === 'safety') icon = 'fa-shield-halved';
+                entry.innerHTML = `<i class="fa-solid ${icon} text-emerald-400 w-4"></i> <span class="flex-1">${log.player} • ${log.message}</span> <span class="font-mono text-[10px] text-zinc-500">${log.time}</span>`;
+                logEl.appendChild(entry);
+            });
             checkForWinner();
+        }
+
+        function updateBallReturn() {
+            const container = document.getElementById('ball-return');
+            if (!container || !gameState) return;
+            container.innerHTML = '';
+            const sunkBalls = gameState.actions.filter(a => a.type === 'pot');
+            if (sunkBalls.length === 0) {
+                container.innerHTML = `<div class="text-center text-zinc-500 text-xs w-full py-2">Balls will appear here as they're sunk...</div>`;
+                return;
+            }
+            sunkBalls.forEach((action, index) => {
+                const player = gameState.players.find(p => p.id === action.playerId);
+                const ballEl = document.createElement('div');
+                ballEl.className = `pool-ball sunk-ball flex-shrink-0 text-[10px] ${action.ball === 8 ? 'bg-black' : ''}`;
+                if (player) ballEl.style.background = player.color;
+                let emoji = '⚫';
+                if (action.ball <= 8) emoji = ['⚫','🔴','🟠','🟣','🟢','🔵','🟤','⚫'][action.ball-1] || '⚫';
+                else emoji = ['🟡','🔴','🟠','🟣','🟢','🔵','🟤','⚫','⚫'][action.ball-9] || '⚫';
+                ballEl.innerHTML = `<span class="text-[9px] font-bold">${action.ball}</span>`;
+                ballEl.title = `${player ? player.name : 'Unknown'} potted ${action.ball}`;
+                container.appendChild(ballEl);
+            });
         }
 
         function showBallSelector() {
@@ -528,15 +464,9 @@
             grid.innerHTML = '';
             const currentPlayer = gameState.players[gameState.currentPlayer];
             const is8ball = gameState.gameType === '8ball';
-
             let balls = [];
             if (is8ball && currentPlayer.team) {
-                if (currentPlayer.team === 'solids') {
-                    balls = [1,2,3,4,5,6,7];
-                } else {
-                    balls = [9,10,11,12,13,14,15];
-                }
-                // Add 8-ball only if group is cleared
+                balls = currentPlayer.team === 'solids' ? [1,2,3,4,5,6,7] : [9,10,11,12,13,14,15];
                 const groupBallsLeft = balls.filter(b => !currentPlayer.ballsPotted.includes(b)).length;
                 if (groupBallsLeft === 0) balls.push(8);
             } else if (gameState.gameType === '9ball') {
@@ -544,7 +474,6 @@
             } else {
                 balls = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
             }
-
             balls.forEach(ballNum => {
                 const btn = document.createElement('button');
                 btn.className = `ball-btn h-14 w-full rounded-2xl flex flex-col items-center justify-center text-sm font-bold ${ballNum === 8 ? 'bg-black text-white' : 'bg-zinc-700 hover:bg-emerald-600'}`;
@@ -571,35 +500,18 @@
             player.ballsPotted.push(ballNum);
             gameState.totalBalls++;
             gameState.turnBalls = (gameState.turnBalls || 0) + 1;
-
-            gameState.actions.push({
-                type: 'pot',
-                playerId: player.id,
-                ball: ballNum,
-                timestamp: Date.now()
-            });
-
+            gameState.actions.push({ type: 'pot', playerId: player.id, ball: ballNum, timestamp: Date.now() });
             const is8ball = gameState.gameType === '8ball';
             let message = `potted the ${ballNum} ball`;
             if (is8ball && ballNum === 8) message = 'potted the 8-ball!';
-
             addLog('pot', message);
             updateUI();
             updateURLState();
-
-            // Auto-check win for 8-ball
             if (is8ball && ballNum === 8) {
                 const groupBalls = player.team === 'solids' ? [1,2,3,4,5,6,7] : [9,10,11,12,13,14,15];
                 const groupCleared = groupBalls.every(b => player.ballsPotted.includes(b));
                 if (groupCleared) {
-                    setTimeout(() => {
-                        player.isWinner = true;
-                        addLog('win', `legally potted the 8-ball and wins!`);
-                        showWinModal(player);
-                    }, 400);
-                } else {
-                    addLog('foul', `potted 8-ball too early (illegal)`);
-                    // In real rules this would be loss, but for MVP we just note it
+                    setTimeout(() => { player.isWinner = true; addLog('win', `legally potted the 8-ball and wins!`); showWinModal(player); }, 400);
                 }
             }
         }
@@ -607,23 +519,15 @@
         function addLog(type, message) {
             if (!gameState) return;
             const timeStr = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-            gameState.logs.push({
-                type,
-                player: gameState.players[gameState.currentPlayer].name,
-                message,
-                time: timeStr
-            });
+            gameState.logs.push({ type, player: gameState.players[gameState.currentPlayer].name, message, time: timeStr });
             if (gameState.logs.length > 14) gameState.logs.shift();
         }
 
         function winRack() {
             if (!gameState) return;
-            const player = gameState.players[gameState.currentPlayer];
             addLog('win', `won the rack!`);
             gameState.turnBalls = 0;
-            if (!gameState.isPractice) {
-                gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
-            }
+            if (!gameState.isPractice) gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
             updateUI();
             updateURLState();
             confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
@@ -633,9 +537,7 @@
             if (!gameState) return;
             addLog('miss', `missed / ended turn`);
             gameState.turnBalls = 0;
-            if (!gameState.isPractice && gameState.players.length > 1) {
-                gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
-            }
+            if (!gameState.isPractice && gameState.players.length > 1) gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
             updateUI();
             updateURLState();
         }
@@ -646,9 +548,7 @@
             player.fouls++;
             addLog('foul', `committed a foul`);
             gameState.turnBalls = 0;
-            if (!gameState.isPractice && gameState.players.length > 1) {
-                gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
-            }
+            if (!gameState.isPractice && gameState.players.length > 1) gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
             updateUI();
             updateURLState();
         }
@@ -659,9 +559,7 @@
             player.safeties++;
             addLog('safety', `played a safety`);
             gameState.turnBalls = 0;
-            if (!gameState.isPractice && gameState.players.length > 1) {
-                gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
-            }
+            if (!gameState.isPractice && gameState.players.length > 1) gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
             updateUI();
             updateURLState();
         }
@@ -674,11 +572,12 @@
                 gameState.totalBalls = Math.max(0, gameState.totalBalls - 1);
                 if (player.ballsPotted.length > 0) player.ballsPotted.pop();
                 gameState.turnBalls = Math.max(0, (gameState.turnBalls || 0) - 1);
-            } else if (last.type === 'foul' && player) {
-                player.fouls = Math.max(0, player.fouls - 1);
-            } else if (last.type === 'safety' && player) {
-                player.safeties = Math.max(0, player.safeties - 1);
-            }
+                // Remove last pot from actions
+                for (let i = gameState.actions.length - 1; i >= 0; i--) {
+                    if (gameState.actions[i].type === 'pot') { gameState.actions.splice(i, 1); break; }
+                }
+            } else if (last.type === 'foul' && player) player.fouls = Math.max(0, player.fouls - 1);
+            else if (last.type === 'safety' && player) player.safeties = Math.max(0, player.safeties - 1);
             updateUI();
             updateURLState();
         }
@@ -709,7 +608,6 @@
 
         function checkForWinner() {
             if (!gameState || gameState.isPractice) return;
-            // 9-ball: last ball (9) wins
             if (gameState.gameType === '9ball') {
                 const hasNine = gameState.players.some(p => p.ballsPotted.includes(9));
                 if (hasNine) {
@@ -776,9 +674,7 @@
         function bootApp() {
             setupKeyboard();
             const loaded = loadFromURL();
-            if (!loaded) {
-                document.getElementById('idle-screen').classList.remove('hidden');
-            }
+            if (!loaded) document.getElementById('idle-screen').classList.remove('hidden');
             document.getElementById('new-game-modal').classList.add('hidden');
             document.getElementById('ball-selector-modal').classList.add('hidden');
             document.getElementById('win-modal').classList.add('hidden');
