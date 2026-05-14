@@ -31,15 +31,13 @@ For best experience:
 - Deploy to GitHub Pages (Settings → Pages → Deploy from `main` branch)
 - Or run locally with Live Server extension in VS Code
 
-## Project Structure
+## Project Files
 
-```
-BreakBPM/
-├── index.html          # The entire app (HTML + CSS + JS)
-├── README.md           # This file
-├── SCHEMA.md           # Data model & future backend plan
-└── (no other files yet)
-```
+- `index.html` — The entire playable app
+- `README.md` — You're here
+- `SCHEMA.md` — Data model for players, games, and actions
+- `CONTRIBUTING.md` — Development guidelines + instructions for future AIs
+- `CHANGELOG.md` — Version history
 
 ## Data Model (see SCHEMA.md for full details)
 
@@ -64,25 +62,20 @@ This project was built iteratively in one long session. The UI went through seve
 3. Added 4-digit codes + proper win rules
 4. Full Windows 98 retro theme + simplified `(X)` ball system (current state)
 
-The ball return was specifically designed to feel like a physical pool table ball return — balls appear in order as they’re logged.
-
-Key files to edit:
-- `index.html` — everything lives here (keep it single-file for now)
-- `SCHEMA.md` — the source of truth for data model
-
-When adding features, prioritize:
-- Keeping the retro Win98 aesthetic
-- Making ball selection feel fair and rule-accurate
-- Keeping the terminal readout clean and satisfying
+**Important for future AIs:**
+- Read `CONTRIBUTING.md` first — it contains specific instructions and constraints
+- Always maintain the Windows 98 aesthetic and `(X)` ball notation
+- Keep changes minimal and focused on the retro experience
+- Update `CHANGELOG.md` with every release
 
 ## Roadmap (Next AI Priorities)
 
 - [ ] Real-time multiplayer (Firebase/Supabase rooms + join by code)
 - [ ] Player accounts & persistent history
 - [ ] Payment integration (Stripe / crypto per-game credits)
-- [ ] Better mobile support (current is desktop-first Win98)
-- [ ] Sound effects (classic Windows .wav clicks?)
-- [ ] Export game summary as image/PDF
+- [ ] Better mobile support
+- [ ] Sound effects (classic Windows .wav style)
+- [ ] Export game summary
 
 ## Credits
 
