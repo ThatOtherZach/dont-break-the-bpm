@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Don't Break the BPM • Pool Scorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        .felt { background: linear-gradient(#0a3d2f, #05241c); }
+        .pool-ball { width: 42px; height: 42px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), inset 0 2px 4px 0 rgb(255 255 255 / 0.3); }
+        .ball-8 { background: #111; }
+        .turn-glow { box-shadow: 0 0 15px #22c55e, 0 0 30px #22c55e; }
+        .action-btn { transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .action-btn:active { transform: scale(0.95); }
+        .stat-value { font-variant-numeric: tabular-nums; }
+        .log-entry { font-size: 0.75rem; }
+        .retro { font-family: 'Press Start 2P', system-ui; }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200">
+    <!-- Header -->
+    <div class="border-b border-zinc-800 bg-zinc-900 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-x-3">
+                <div class="w-11 h-11 bg-emerald-600 rounded-2xl flex items-center justify-center text-3xl shadow-inner">🎱</div>
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tighter">Don't Break the BPM</h1>
+                    <p class="text-emerald-400 text-xs -mt-1 retro">BILLIARDS PERFORMANCE METER</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-x-2">
+                <button onclick="showNewGameModal()" 
+                        class="px-5 py-2.5 bg-white text-zinc-950 font-semibold rounded-2xl text-sm flex items-center gap-x-2 hover:bg-zinc-100 transition-colors">
+                    <i class="fa-solid fa-plus mr-1"></i> 
+                    <span class="font-bold">New Game</span>
+                </button>
+                <button onclick="togglePracticeMode()" 
+                        class="px-4 py-2.5 border border-zinc-700 hover:bg-zinc-900 rounded-2xl text-sm flex items-center gap-x-2 transition-colors" id="practice-btn">
+                    <i class="fa-solid fa-user"></i>
+                    <span>Practice</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-4 py-6">
+        <!-- Game Setup / Idle State -->
+        <div id="idle-screen" class="max-w-md mx-auto text-center py-12">
+            <div class="mx-auto w-24 h-24 bg-zinc-900 rounded-3xl flex items-center justify-center mb-6 border border-zinc-800">
+                <i class="fa-solid fa-play text-5xl text-emerald-500"></i>
+            </div>
+            <h2 class="text-4xl font-bold mb-3">Ready to rack 'em up?</h2>
+            <p class="text-zinc-400 mb-8">Create a new game or jump into solo practice.<br>Share the link with your crew for instant multiplayer.</p>
+            
+            <div class="flex flex-col gap-3 max-w-xs mx-auto">
+                <button onclick="showNewGameModal()" 
+                        class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 transition-colors text-white font-bold rounded-3xl flex items-center justify-center gap-x-3 text-lg">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Start New Game (1-4 players)</span>
+                </button>
+                <button onclick="startPracticeMode()" 
+                        class="w-full py-4 bg-zinc-800 hover:bg-zinc-700 transition-colors font-semibold rounded-3xl flex items-center justify-center gap-x-3">
+                    <i class="fa-solid fa-stopwatch"></i>
+                    <span>Solo Practice Mode</span>
+                </button>
+            </div>
+            
+            <div class="mt-10 text-xs text-zinc-500">
+                <p>Pro tip: Use the share button during a game to send live state to friends.</p>
+            </div>
+        </div>
+
+        <!-- Active Game Screen -->
+        <div id="game-screen" class="hidden">
+            <!-- Top Bar: Game Info + Timer + BPM -->
+            <div class="flex items-center justify-between mb-4 bg-zinc-900 border border-zinc-800 rounded-3xl px-5 py-3">
+                <div class="flex items-center gap-x-4">
+                    <div>
+                        <div class="text-xs text-zinc-500">GAME TYPE</div>
+                        <div id="game-type-display" class="font-bold text-lg"></div>
+                    </div>
+                    <div class="h-8 w-px bg-zinc-700"></div>
+                    <div>
+                        <div class="text-xs text-zinc-500">RACE TO</div>
+                        <div id="race-to-display" class="font-bold text-lg"></div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-x-6">
+                    <!-- BPM -->
+                    <div class="text-center">
+                        <div class="text-[10px] text-emerald-400 tracking-[1px] font-mono">BPM</div>
+                        <div id="bpm-value" class="text-4xl font-bold tabular-nums text-emerald-400">0.0</div>
+                    </div>
+
+                    <!-- Timer -->
+                    <div class="text-center">
+                        <div class="text-[10px] text-zinc-500 tracking-[1px] font-mono">ELAPSED</div>
+                        <div id="timer-value" class="font-mono text-3xl font-semibold tabular-nums">00:00</div>
+                        <div class="flex gap-1 justify-center mt-0.5">
+                            <button onclick="toggleTimer()" class="text-xs px-2 py-0.5 bg-zinc-800 rounded hover:bg-zinc-700" id="timer-btn">
+                                <i class="fa-solid fa-pause"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Players Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="players-grid">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Action Panel -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <span class="text-xs text-zinc-500">CURRENT TURN</span>
+                        <div id="current-player-name" class="font-bold text-2xl"></div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-zinc-500">THIS TURN</span>
+                        <div id="turn-balls" class="font-mono text-3xl font-bold text-amber-400">0</div>
+                        <div class="text-[10px] text-zinc-500 -mt-1">BALLS</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <button onclick="potBall()" 
+                            class="action-btn col-span-2 sm:col-span-1 h-20 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-2xl font-bold flex flex-col items-center justify-center gap-y-1 text-sm">
+                        <i class="fa-solid fa-bowling-ball text-2xl"></i>
+                        <span>POTTED BALL</span>
+                    </button>
+                    
+                    <button onclick="winRack()" 
+                            class="action-btn h-20 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-zinc-950 rounded-2xl font-bold flex flex-col items-center justify-center gap-y-1 text-sm">
+                        <i class="fa-solid fa-trophy text-xl"></i>
+                        <span>WIN RACK</span>
+                    </button>
+                    
+                    <button onclick="miss()" 
+                            class="action-btn h-20 bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-500 rounded-2xl font-bold flex flex-col items-center justify-center gap-y-1 text-sm">
+                        <i class="fa-solid fa-times text-xl"></i>
+                        <span>MISS / END TURN</span>
+                    </button>
+                    
+                    <button onclick="foul()" 
+                            class="action-btn h-20 bg-red-600/90 hover:bg-red-600 active:bg-red-700 rounded-2xl font-bold flex flex-col items-center justify-center gap-y-1 text-sm">
+                        <i class="fa-solid fa-exclamation-triangle text-xl"></i>
+                        <span>FOUL</span>
+                    </button>
+                    
+                    <button onclick="safety()" 
+                            class="action-btn h-20 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 rounded-2xl font-bold flex flex-col items-center justify-center gap-y-1 text-sm">
+                        <i class="fa-solid fa-shield-halved text-xl"></i>
+                        <span>SAFETY</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bottom Row: Log + Share -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                <!-- Shot Log -->
+                <div class="lg:col-span-3 bg-zinc-900 border border-zinc-800 rounded-3xl p-4">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <div class="font-semibold flex items-center gap-x-2">
+                            <i class="fa-solid fa-list text-emerald-400"></i> 
+                            <span>SHOT LOG</span>
+                        </div>
+                        <button onclick="undoLastAction()" class="text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-xl flex items-center gap-x-1">
+                            <i class="fa-solid fa-undo"></i> <span>Undo</span>
+                        </button>
+                    </div>
+                    <div id="shot-log" class="h-48 overflow-y-auto text-sm space-y-1 pr-2 custom-scroll">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Share & End -->
+                <div class="lg:col-span-2 flex flex-col gap-3">
+                    <button onclick="shareLink()" 
+                            class="flex-1 bg-white text-zinc-950 hover:bg-zinc-100 transition-colors font-bold rounded-3xl flex items-center justify-center gap-x-3 text-base">
+                        <i class="fa-solid fa-share-alt"></i>
+                        <span>SHARE LIVE LINK</span>
+                    </button>
+                    
+                    <button onclick="endGame()" 
+                            class="flex-1 border border-red-500/50 hover:bg-red-950/50 text-red-400 font-semibold rounded-3xl flex items-center justify-center gap-x-3 text-sm py-3">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                        <span>END GAME EARLY</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Game Modal -->
+    <div id="new-game-modal" onclick="if (event.target.id === 'new-game-modal') hideNewGameModal()" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="bg-zinc-900 border border-zinc-700 w-full max-w-md rounded-3xl p-6">
+            <h3 class="text-2xl font-bold mb-6 flex items-center gap-x-3">
+                <i class="fa-solid fa-play"></i> 
+                <span>New Game</span>
+            </h3>
+            
+            <div class="space-y-5">
+                <!-- Player Names -->
+                <div>
+                    <label class="block text-xs font-medium text-zinc-400 mb-2">PLAYERS (1-4)</label>
+                    <div id="player-inputs" class="space-y-2">
+                        <!-- JS populated inputs -->
+                    </div>
+                    <button onclick="addPlayerInput()" class="mt-2 text-emerald-400 text-sm flex items-center gap-x-1 hover:text-emerald-300">
+                        <i class="fa-solid fa-plus-circle"></i> <span>Add Player</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-400 mb-1.5">GAME TYPE</label>
+                        <select id="game-type" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-3 text-sm">
+                            <option value="8-ball">8-Ball (Solids & Stripes)</option>
+                            <option value="9-ball">9-Ball (Rotation)</option>
+                            <option value="custom">Custom / Straight Pool</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-400 mb-1.5">RACE TO</label>
+                        <select id="race-to" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-3 text-sm">
+                            <option value="3">3 racks (casual)</option>
+                            <option value="5" selected>5 racks (standard)</option>
+                            <option value="7">7 racks (serious)</option>
+                            <option value="10">10 racks</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button onclick="hideNewGameModal()" class="flex-1 py-3.5 border border-zinc-700 rounded-2xl font-semibold">Cancel</button>
+                <button onclick="startNewGame()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-500 transition-colors rounded-2xl font-bold">Start Game</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" onclick="if (event.target.id === 'win-modal') hideWinModal()" class="hidden fixed inset-0 bg-black/90 z-[110] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="bg-zinc-900 border border-emerald-600 w-full max-w-sm rounded-3xl p-8 text-center">
+            <div class="text-7xl mb-4">🏆</div>
+            <h2 class="text-4xl font-bold mb-2" id="winner-name"></h2>
+            <p class="text-emerald-400 mb-6">WINS THE MATCH!</p>
+            
+            <div class="bg-zinc-950 rounded-2xl p-4 mb-6 text-left text-sm">
+                <div class="flex justify-between py-1.5 border-b border-zinc-800"><span class="text-zinc-400">Final BPM</span> <span id="final-bpm" class="font-mono font-bold"></span></div>
+                <div class="flex justify-between py-1.5 border-b border-zinc-800"><span class="text-zinc-400">Total Time</span> <span id="final-time" class="font-mono font-bold"></span></div>
+                <div class="flex justify-between py-1.5"><span class="text-zinc-400">Total Balls Potted</span> <span id="final-balls" class="font-mono font-bold"></span></div>
+            </div>
+
+            <button onclick="startNewGameFromWin()" class="w-full py-4 bg-white text-zinc-950 font-bold rounded-2xl">Play Again</button>
+            <button onclick="hideWinModal()" class="mt-3 text-sm text-zinc-400 hover:text-zinc-200">Close</button>
+        </div>
+    </div>
+
+    <footer class="text-center py-8 text-xs text-zinc-500">
+        Built with ❤️ + Grok • <a href="https://github.com/ThatOtherZach/dont-break-the-bpm" class="hover:text-zinc-300">View on GitHub</a> • v0.1 MVP
+    </footer>
+
+    <script>
+        // Tailwind script
+        function initializeTailwind() {
+            document.documentElement.style.setProperty('--accent', '#10b981');
+        }
+
+        let gameState = null;
+        let timerInterval = null;
+        let lastAction = null;
+
+        function updateURLState() {
+            if (!gameState) return;
+            const stateCopy = JSON.parse(JSON.stringify(gameState));
+            // Remove non-serializable or heavy fields if needed
+            delete stateCopy.startTime; // we'll recalc on load
+            const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(stateCopy))));
+            const url = new URL(window.location);
+            url.searchParams.set('state', encoded);
+            window.history.replaceState({}, '', url);
+        }
+
+        function loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const stateParam = params.get('state');
+            if (!stateParam) return false;
+
+            try {
+                const decoded = decodeURIComponent(escape(atob(stateParam)));
+                const loadedState = JSON.parse(decoded);
+                
+                // Rehydrate dates
+                if (loadedState.startTime) {
+                    loadedState.startTime = new Date(loadedState.startTime);
+                } else {
+                    loadedState.startTime = Date.now();
+                }
+                loadedState.paused = loadedState.paused || false;
+                loadedState.elapsed = loadedState.elapsed || 0;
+
+                gameState = loadedState;
+                document.getElementById('idle-screen').classList.add('hidden');
+                document.getElementById('game-screen').classList.remove('hidden');
+                
+                startTimer();
+                updateUI();
+                return true;
+            } catch (e) {
+                console.error('Failed to load state from URL', e);
+                return false;
+            }
+        }
+
+        function showNewGameModal() {
+            const modal = document.getElementById('new-game-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Reset player inputs
+            const container = document.getElementById('player-inputs');
+            container.innerHTML = '';
+            for (let i = 0; i < 2; i++) {
+                addPlayerInput(i === 0 ? 'Player 1' : 'Player 2');
+            }
+        }
+
+        function hideNewGameModal() {
+            const modal = document.getElementById('new-game-modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        function addPlayerInput(defaultName = '') {
+            const container = document.getElementById('player-inputs');
+            if (container.children.length >= 4) {
+                alert('Max 4 players!');
+                return;
+            }
+            const div = document.createElement('div');
+            div.className = 'flex gap-2';
+            div.innerHTML = `
+                <input type="text" value="${defaultName}" placeholder="Player name" 
+                       class="flex-1 bg-zinc-800 border border-zinc-700 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500">
+                <button type="button" onclick="this.parentElement.remove()" 
+                        class="px-3 text-red-400 hover:text-red-300"><i class="fa-solid fa-times"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function startNewGame() {
+            const inputs = document.querySelectorAll('#player-inputs input');
+            const players = Array.from(inputs).map((input, i) => ({
+                id: Date.now() + i,
+                name: input.value.trim() || `Player ${i+1}`,
+                racks: 0,
+                ballsPotted: 0,
+                fouls: 0,
+                safeties: 0,
+                color: ['#ef4444', '#3b82f6', '#eab308', '#a855f7'][i % 4]
+            })).filter(p => p.name);
+
+            if (players.length === 0) {
+                alert('Add at least one player!');
+                return;
+            }
+
+            const raceTo = parseInt(document.getElementById('race-to').value);
+            const gameType = document.getElementById('game-type').value;
+
+            gameState = {
+                players,
+                currentPlayer: 0,
+                raceTo,
+                gameType,
+                startTime: Date.now(),
+                paused: false,
+                totalBalls: 0,
+                elapsed: 0,
+                logs: [],
+                turnBalls: 0,
+                turnFouls: 0,
+                isPractice: false
+            };
+
+            hideNewGameModal();
+            document.getElementById('idle-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            updateUI();
+            startTimer();
+            updateURLState();
+        }
+
+        function startPracticeMode() {
+            gameState = {
+                players: [{
+                    id: Date.now(),
+                    name: 'You (Practice)',
+                    racks: 0,
+                    ballsPotted: 0,
+                    fouls: 0,
+                    safeties: 0,
+                    color: '#22c55e'
+                }],
+                currentPlayer: 0,
+                raceTo: 999,
+                gameType: 'practice',
+                startTime: Date.now(),
+                paused: false,
+                totalBalls: 0,
+                elapsed: 0,
+                logs: [],
+                turnBalls: 0,
+                turnFouls: 0,
+                isPractice: true
+            };
+
+            document.getElementById('idle-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('practice-btn').classList.add('!bg-emerald-600', '!text-white');
+
+            updateUI();
+            startTimer();
+            updateURLState();
+        }
+
+        function togglePracticeMode() {
+            if (gameState && gameState.isPractice) {
+                // End practice
+                endGame();
+            } else {
+                startPracticeMode();
+            }
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!gameState || gameState.paused) return;
+                
+                const now = Date.now();
+                gameState.elapsed = Math.floor((now - gameState.startTime) / 1000);
+                
+                // Update BPM
+                const minutes = gameState.elapsed / 60;
+                const bpm = minutes > 0 ? (gameState.totalBalls / minutes).toFixed(1) : '0.0';
+                document.getElementById('bpm-value').textContent = bpm;
+
+                // Timer display
+                const mins = Math.floor(gameState.elapsed / 60);
+                const secs = gameState.elapsed % 60;
+                document.getElementById('timer-value').textContent = 
+                    `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function toggleTimer() {
+            if (!gameState) return;
+            gameState.paused = !gameState.paused;
+            const btn = document.getElementById('timer-btn');
+            if (gameState.paused) {
+                btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+                btn.classList.add('!bg-emerald-600', '!text-white');
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                btn.classList.remove('!bg-emerald-600', '!text-white');
+                gameState.startTime = Date.now() - (gameState.elapsed * 1000);
+                startTimer();
+            }
+            updateURLState();
+        }
+
+        function updateUI() {
+            if (!gameState) return;
+
+            // Game type & race
+            const typeEl = document.getElementById('game-type-display');
+            typeEl.textContent = gameState.gameType === 'practice' ? 'PRACTICE' : 
+                              gameState.gameType === '8-ball' ? '8-BALL' : 
+                              gameState.gameType === '9-ball' ? '9-BALL' : 'CUSTOM';
+            document.getElementById('race-to-display').textContent = gameState.raceTo === 999 ? '∞' : gameState.raceTo;
+
+            // Players
+            const grid = document.getElementById('players-grid');
+            grid.innerHTML = '';
+
+            gameState.players.forEach((player, index) => {
+                const isCurrent = index === gameState.currentPlayer;
+                const card = document.createElement('div');
+                card.className = `bg-zinc-900 border ${isCurrent ? 'border-emerald-500 turn-glow' : 'border-zinc-700'} rounded-3xl p-4 transition-all`;
+                
+                const winRate = player.racks > 0 ? Math.round((player.racks / gameState.raceTo) * 100) : 0;
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-x-3">
+                            <div class="pool-ball text-xs" style="background: ${player.color}">
+                                ${player.name.substring(0,2).toUpperCase()}
+                            </div>
+                            <div>
+                                <div class="font-bold text-lg">${player.name}</div>
+                                <div class="text-xs text-zinc-500">${player.fouls} fouls • ${player.safeties} safeties</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-5xl font-bold tabular-nums leading-none" style="color: ${player.color}">${player.racks}</div>
+                            <div class="text-[10px] -mt-1 text-zinc-500">RACKS</div>
+                        </div>
+                    </div>
+                    
+                    ${isCurrent ? `
+                    <div class="mt-3 pt-3 border-t border-zinc-800 flex items-center gap-x-2 text-xs">
+                        <div class="px-2.5 py-1 bg-emerald-900/50 text-emerald-400 rounded-xl flex-1 text-center font-mono">YOUR TURN</div>
+                    </div>` : ''}
+                `;
+                grid.appendChild(card);
+            });
+
+            // Current player name
+            if (gameState.players[gameState.currentPlayer]) {
+                document.getElementById('current-player-name').textContent = gameState.players[gameState.currentPlayer].name;
+            }
+            document.getElementById('turn-balls').textContent = gameState.turnBalls || 0;
+
+            // Shot log
+            const logEl = document.getElementById('shot-log');
+            logEl.innerHTML = '';
+            if (gameState.logs.length === 0) {
+                logEl.innerHTML = `<div class="text-center py-8 text-zinc-500 text-xs">No shots logged yet. Start shooting!</div>`;
+            } else {
+                gameState.logs.slice().reverse().forEach((log, i) => {
+                    const entry = document.createElement('div');
+                    entry.className = `log-entry px-3 py-1.5 rounded-2xl flex items-center gap-x-3 ${i === 0 ? 'bg-zinc-800' : ''}`;
+                    let icon = '';
+                    let color = 'text-zinc-400';
+                    if (log.type === 'pot') { icon = 'fa-bowling-ball'; color = 'text-emerald-400'; }
+                    else if (log.type === 'win') { icon = 'fa-trophy'; color = 'text-amber-400'; }
+                    else if (log.type === 'miss') { icon = 'fa-times'; color = 'text-zinc-400'; }
+                    else if (log.type === 'foul') { icon = 'fa-exclamation-triangle'; color = 'text-red-400'; }
+                    else if (log.type === 'safety') { icon = 'fa-shield-halved'; color = 'text-sky-400'; }
+                    
+                    entry.innerHTML = `
+                        <i class="fa-solid ${icon} ${color} w-4"></i>
+                        <span class="flex-1">${log.player} • ${log.message}</span>
+                        <span class="font-mono text-[10px] text-zinc-500">${log.time}</span>
+                    `;
+                    logEl.appendChild(entry);
+                });
+            }
+
+            // Check for winner
+            checkForWinner();
+        }
+
+        function checkForWinner() {
+            if (!gameState || gameState.isPractice) return;
+            const winner = gameState.players.find(p => p.racks >= gameState.raceTo);
+            if (winner) {
+                setTimeout(() => showWinModal(winner), 600);
+            }
+        }
+
+        function addLog(type, message) {
+            if (!gameState) return;
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            gameState.logs.push({
+                type,
+                player: gameState.players[gameState.currentPlayer]?.name || 'Unknown',
+                message,
+                time: timeStr
+            });
+            if (gameState.logs.length > 12) gameState.logs.shift();
+        }
+
+        function potBall() {
+            if (!gameState) return;
+            gameState.totalBalls++;
+            gameState.turnBalls = (gameState.turnBalls || 0) + 1;
+            const player = gameState.players[gameState.currentPlayer];
+            player.ballsPotted++;
+            
+            addLog('pot', `potted a ball (+1)`);
+            updateUI();
+            updateURLState();
+        }
+
+        function winRack() {
+            if (!gameState) return;
+            const player = gameState.players[gameState.currentPlayer];
+            player.racks++;
+            
+            addLog('win', `won the rack!`);
+            
+            // Reset turn counters
+            gameState.turnBalls = 0;
+            gameState.turnFouls = 0;
+            
+            // Switch to next player (or stay if practice)
+            if (!gameState.isPractice) {
+                gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
+            }
+            
+            updateUI();
+            updateURLState();
+            
+            // Confetti for rack win
+            confetti({
+                particleCount: 120,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        function miss() {
+            if (!gameState) return;
+            addLog('miss', `missed / ended turn`);
+            
+            gameState.turnBalls = 0;
+            gameState.turnFouls = 0;
+            
+            // Switch player
+            if (!gameState.isPractice && gameState.players.length > 1) {
+                gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
+            }
+            
+            updateUI();
+            updateURLState();
+        }
+
+        function foul() {
+            if (!gameState) return;
+            const player = gameState.players[gameState.currentPlayer];
+            player.fouls++;
+            gameState.turnFouls = (gameState.turnFouls || 0) + 1;
+            
+            addLog('foul', `committed a foul`);
+            
+            // In many games foul = ball in hand to opponent, so switch turn
+            if (!gameState.isPractice && gameState.players.length > 1) {
+                gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
+            }
+            gameState.turnBalls = 0;
+            
+            updateUI();
+            updateURLState();
+        }
+
+        function safety() {
+            if (!gameState) return;
+            const player = gameState.players[gameState.currentPlayer];
+            player.safeties++;
+            
+            addLog('safety', `played a safety`);
+            
+            // Safety often ends turn
+            if (!gameState.isPractice && gameState.players.length > 1) {
+                gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
+            }
+            gameState.turnBalls = 0;
+            
+            updateUI();
+            updateURLState();
+        }
+
+        function undoLastAction() {
+            if (!gameState || gameState.logs.length === 0) return;
+            const last = gameState.logs.pop();
+            
+            // Simple undo logic (best effort for MVP)
+            if (last.type === 'pot') {
+                gameState.totalBalls = Math.max(0, gameState.totalBalls - 1);
+                const p = gameState.players[gameState.currentPlayer];
+                if (p) p.ballsPotted = Math.max(0, p.ballsPotted - 1);
+                gameState.turnBalls = Math.max(0, (gameState.turnBalls || 0) - 1);
+            } else if (last.type === 'win') {
+                const p = gameState.players.find(pl => pl.name === last.player);
+                if (p) p.racks = Math.max(0, p.racks - 1);
+            } else if (last.type === 'foul') {
+                const p = gameState.players.find(pl => pl.name === last.player);
+                if (p) p.fouls = Math.max(0, p.fouls - 1);
+                gameState.turnFouls = Math.max(0, (gameState.turnFouls || 0) - 1);
+            } else if (last.type === 'safety') {
+                const p = gameState.players.find(pl => pl.name === last.player);
+                if (p) p.safeties = Math.max(0, p.safeties - 1);
+            }
+            // miss and others are hard to undo perfectly, but log is removed
+            
+            updateUI();
+            updateURLState();
+        }
+
+        function shareLink() {
+            if (!gameState) return;
+            updateURLState(); // ensure latest
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                const originalText = event.currentTarget ? event.currentTarget.innerHTML : '';
+                const btns = document.querySelectorAll('button');
+                // Simple toast
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-x-2 z-[200]';
+                toast.innerHTML = `<i class="fa-solid fa-check"></i> <span>Link copied! Send it to your friends.</span>`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2800);
+            }).catch(() => {
+                // Fallback
+                prompt('Copy this link:', url);
+            });
+        }
+
+        function showWinModal(winner) {
+            if (!gameState) return;
+            const modal = document.getElementById('win-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            document.getElementById('winner-name').textContent = winner.name;
+            
+            const minutes = (gameState.elapsed / 60).toFixed(1);
+            const bpm = minutes > 0 ? (gameState.totalBalls / parseFloat(minutes)).toFixed(1) : '0.0';
+            
+            document.getElementById('final-bpm').textContent = bpm + ' BPM';
+            document.getElementById('final-time').textContent = 
+                `${Math.floor(gameState.elapsed / 60)}m ${gameState.elapsed % 60}s`;
+            document.getElementById('final-balls').textContent = gameState.totalBalls;
+            
+            // Big confetti
+            confetti({
+                particleCount: 300,
+                spread: 100,
+                origin: { y: 0.7 }
+            });
+            setTimeout(() => {
+                confetti({
+                    particleCount: 150,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0.1 }
+                });
+            }, 280);
+        }
+
+        function hideWinModal() {
+            const modal = document.getElementById('win-modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        function startNewGameFromWin() {
+            hideWinModal();
+            // Clear URL state
+            const url = new URL(window.location);
+            url.searchParams.delete('state');
+            window.history.replaceState({}, '', url);
+            showNewGameModal();
+        }
+
+        function endGame() {
+            if (!gameState) return;
+            if (confirm('End the current game?')) {
+                clearInterval(timerInterval);
+                const url = new URL(window.location);
+                url.searchParams.delete('state');
+                window.history.replaceState({}, '', url);
+                
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('idle-screen').classList.remove('hidden');
+                gameState = null;
+                document.getElementById('practice-btn').classList.remove('!bg-emerald-600', '!text-white');
+            }
+        }
+
+        function checkForWinnerOnLoad() {
+            // Handled in updateUI
+        }
+
+        // Keyboard shortcuts
+        function setupKeyboard() {
+            document.addEventListener('keydown', (e) => {
+                if (!gameState) return;
+                if (e.key === 'p' || e.key === 'P') potBall();
+                if (e.key === 'w' || e.key === 'W') winRack();
+                if (e.key === 'm' || e.key === 'M') miss();
+                if (e.key === 'f' || e.key === 'F') foul();
+                if (e.key === 's' || e.key === 'S') safety();
+                if (e.key === 'u' || e.key === 'U') undoLastAction();
+            });
+            
+            // Easter egg
+            let konami = [];
+            const code = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+            document.addEventListener('keyup', (e) => {
+                konami.push(e.key);
+                if (konami.length > 10) konami.shift();
+                if (konami.join(',') === code.join(',')) {
+                    confetti({ particleCount: 500, spread: 120 });
+                    konami = [];
+                }
+            });
+        }
+
+        // Boot the app
+        function bootApp() {
+            initializeTailwind();
+            setupKeyboard();
+            
+            // Try to load from URL first
+            const loaded = loadFromURL();
+            
+            if (!loaded) {
+                // Show idle screen by default
+                document.getElementById('idle-screen').classList.remove('hidden');
+            }
+            
+            // Demo hint for first time
+            if (!localStorage.getItem('hasPlayed')) {
+                setTimeout(() => {
+                    if (!gameState && document.getElementById('idle-screen').classList.contains('hidden') === false) {
+                        // Could show a toast but skip for cleanliness
+                    }
+                }, 4200);
+                localStorage.setItem('hasPlayed', 'true');
+            }
+            
+            // Make sure modals are hidden
+            document.getElementById('new-game-modal').classList.add('hidden');
+            document.getElementById('win-modal').classList.add('hidden');
+        }
+
+        window.onload = bootApp;
+    </script>
+</body>
+</html>
