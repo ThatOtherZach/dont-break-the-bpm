@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Don't Break the BPM • Pool Scorer</title>
+    <title>BreakBPM • Pool Scorer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -28,8 +28,8 @@
             <div class="flex items-center gap-x-3">
                 <div class="w-11 h-11 bg-emerald-600 rounded-2xl flex items-center justify-center text-3xl shadow-inner">🎱</div>
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tighter">Don't Break the BPM</h1>
-                    <p class="text-emerald-400 text-xs -mt-1 retro">BILLIARDS PERFORMANCE METER</p>
+                    <h1 class="text-3xl font-bold tracking-tighter">BreakBPM</h1>
+                    <p class="text-emerald-400 text-xs -mt-1 retro">FROM BREAK TO FINISH</p>
                 </div>
             </div>
             <div class="flex items-center gap-x-2">
@@ -53,8 +53,8 @@
             <div class="mx-auto w-24 h-24 bg-zinc-900 rounded-3xl flex items-center justify-center mb-6 border border-zinc-800">
                 <i class="fa-solid fa-play text-5xl text-emerald-500"></i>
             </div>
-            <h2 class="text-4xl font-bold mb-3">Ready to rack 'em up?</h2>
-            <p class="text-zinc-400 mb-8">Create a new game or jump into solo practice.<br>Share the link with your crew for instant multiplayer.</p>
+            <h2 class="text-4xl font-bold mb-3">Ready to break?</h2>
+            <p class="text-zinc-400 mb-8">Start a new game or solo practice.<br>Share the link and track BPM from break to win.</p>
             
             <div class="flex flex-col gap-3 max-w-xs mx-auto">
                 <button onclick="showNewGameModal()" 
@@ -70,7 +70,7 @@
             </div>
             
             <div class="mt-10 text-xs text-zinc-500">
-                <p>Pro tip: Use the share button during a game to send live state to friends.</p>
+                <p>Pro tip: Share the link mid-game – friends see live BPM & scores.</p>
             </div>
         </div>
 
@@ -93,7 +93,7 @@
                 <div class="flex items-center gap-x-6">
                     <!-- BPM -->
                     <div class="text-center">
-                        <div class="text-[10px] text-emerald-400 tracking-[1px] font-mono">BPM</div>
+                        <div class="text-[10px] text-emerald-400 tracking-[1px] font-mono">BREAKBPM</div>
                         <div id="bpm-value" class="text-4xl font-bold tabular-nums text-emerald-400">0.0</div>
                     </div>
 
@@ -254,7 +254,7 @@
             <p class="text-emerald-400 mb-6">WINS THE MATCH!</p>
             
             <div class="bg-zinc-950 rounded-2xl p-4 mb-6 text-left text-sm">
-                <div class="flex justify-between py-1.5 border-b border-zinc-800"><span class="text-zinc-400">Final BPM</span> <span id="final-bpm" class="font-mono font-bold"></span></div>
+                <div class="flex justify-between py-1.5 border-b border-zinc-800"><span class="text-zinc-400">Final BreakBPM</span> <span id="final-bpm" class="font-mono font-bold"></span></div>
                 <div class="flex justify-between py-1.5 border-b border-zinc-800"><span class="text-zinc-400">Total Time</span> <span id="final-time" class="font-mono font-bold"></span></div>
                 <div class="flex justify-between py-1.5"><span class="text-zinc-400">Total Balls Potted</span> <span id="final-balls" class="font-mono font-bold"></span></div>
             </div>
@@ -265,7 +265,7 @@
     </div>
 
     <footer class="text-center py-8 text-xs text-zinc-500">
-        Built with ❤️ + Grok • <a href="https://github.com/ThatOtherZach/dont-break-the-bpm" class="hover:text-zinc-300">View on GitHub</a> • v0.1 MVP
+        Built with ❤️ + Grok • <a href="https://github.com/ThatOtherZach/dont-break-the-bpm" class="hover:text-zinc-300">View on GitHub</a> • v0.1 • BreakBPM
     </footer>
 
     <script>
@@ -281,8 +281,7 @@
         function updateURLState() {
             if (!gameState) return;
             const stateCopy = JSON.parse(JSON.stringify(gameState));
-            // Remove non-serializable or heavy fields if needed
-            delete stateCopy.startTime; // we'll recalc on load
+            delete stateCopy.startTime;
             const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(stateCopy))));
             const url = new URL(window.location);
             url.searchParams.set('state', encoded);
@@ -297,8 +296,6 @@
             try {
                 const decoded = decodeURIComponent(escape(atob(stateParam)));
                 const loadedState = JSON.parse(decoded);
-                
-                // Rehydrate dates
                 if (loadedState.startTime) {
                     loadedState.startTime = new Date(loadedState.startTime);
                 } else {
@@ -325,7 +322,6 @@
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             
-            // Reset player inputs
             const container = document.getElementById('player-inputs');
             container.innerHTML = '';
             for (let i = 0; i < 2; i++) {
@@ -435,7 +431,6 @@
 
         function togglePracticeMode() {
             if (gameState && gameState.isPractice) {
-                // End practice
                 endGame();
             } else {
                 startPracticeMode();
@@ -450,12 +445,10 @@
                 const now = Date.now();
                 gameState.elapsed = Math.floor((now - gameState.startTime) / 1000);
                 
-                // Update BPM
                 const minutes = gameState.elapsed / 60;
                 const bpm = minutes > 0 ? (gameState.totalBalls / minutes).toFixed(1) : '0.0';
                 document.getElementById('bpm-value').textContent = bpm;
 
-                // Timer display
                 const mins = Math.floor(gameState.elapsed / 60);
                 const secs = gameState.elapsed % 60;
                 document.getElementById('timer-value').textContent = 
@@ -482,14 +475,12 @@
         function updateUI() {
             if (!gameState) return;
 
-            // Game type & race
             const typeEl = document.getElementById('game-type-display');
             typeEl.textContent = gameState.gameType === 'practice' ? 'PRACTICE' : 
                               gameState.gameType === '8-ball' ? '8-BALL' : 
                               gameState.gameType === '9-ball' ? '9-BALL' : 'CUSTOM';
             document.getElementById('race-to-display').textContent = gameState.raceTo === 999 ? '∞' : gameState.raceTo;
 
-            // Players
             const grid = document.getElementById('players-grid');
             grid.innerHTML = '';
 
@@ -497,8 +488,6 @@
                 const isCurrent = index === gameState.currentPlayer;
                 const card = document.createElement('div');
                 card.className = `bg-zinc-900 border ${isCurrent ? 'border-emerald-500 turn-glow' : 'border-zinc-700'} rounded-3xl p-4 transition-all`;
-                
-                const winRate = player.racks > 0 ? Math.round((player.racks / gameState.raceTo) * 100) : 0;
                 
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
@@ -525,13 +514,11 @@
                 grid.appendChild(card);
             });
 
-            // Current player name
             if (gameState.players[gameState.currentPlayer]) {
                 document.getElementById('current-player-name').textContent = gameState.players[gameState.currentPlayer].name;
             }
             document.getElementById('turn-balls').textContent = gameState.turnBalls || 0;
 
-            // Shot log
             const logEl = document.getElementById('shot-log');
             logEl.innerHTML = '';
             if (gameState.logs.length === 0) {
@@ -557,7 +544,6 @@
                 });
             }
 
-            // Check for winner
             checkForWinner();
         }
 
@@ -601,11 +587,9 @@
             
             addLog('win', `won the rack!`);
             
-            // Reset turn counters
             gameState.turnBalls = 0;
             gameState.turnFouls = 0;
             
-            // Switch to next player (or stay if practice)
             if (!gameState.isPractice) {
                 gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
             }
@@ -613,7 +597,6 @@
             updateUI();
             updateURLState();
             
-            // Confetti for rack win
             confetti({
                 particleCount: 120,
                 spread: 70,
@@ -628,7 +611,6 @@
             gameState.turnBalls = 0;
             gameState.turnFouls = 0;
             
-            // Switch player
             if (!gameState.isPractice && gameState.players.length > 1) {
                 gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
             }
@@ -645,7 +627,6 @@
             
             addLog('foul', `committed a foul`);
             
-            // In many games foul = ball in hand to opponent, so switch turn
             if (!gameState.isPractice && gameState.players.length > 1) {
                 gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
             }
@@ -662,7 +643,6 @@
             
             addLog('safety', `played a safety`);
             
-            // Safety often ends turn
             if (!gameState.isPractice && gameState.players.length > 1) {
                 gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
             }
@@ -676,7 +656,6 @@
             if (!gameState || gameState.logs.length === 0) return;
             const last = gameState.logs.pop();
             
-            // Simple undo logic (best effort for MVP)
             if (last.type === 'pot') {
                 gameState.totalBalls = Math.max(0, gameState.totalBalls - 1);
                 const p = gameState.players[gameState.currentPlayer];
@@ -693,7 +672,6 @@
                 const p = gameState.players.find(pl => pl.name === last.player);
                 if (p) p.safeties = Math.max(0, p.safeties - 1);
             }
-            // miss and others are hard to undo perfectly, but log is removed
             
             updateUI();
             updateURLState();
@@ -701,19 +679,15 @@
 
         function shareLink() {
             if (!gameState) return;
-            updateURLState(); // ensure latest
+            updateURLState();
             const url = window.location.href;
             navigator.clipboard.writeText(url).then(() => {
-                const originalText = event.currentTarget ? event.currentTarget.innerHTML : '';
-                const btns = document.querySelectorAll('button');
-                // Simple toast
                 const toast = document.createElement('div');
                 toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-x-2 z-[200]';
                 toast.innerHTML = `<i class="fa-solid fa-check"></i> <span>Link copied! Send it to your friends.</span>`;
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 2800);
             }).catch(() => {
-                // Fallback
                 prompt('Copy this link:', url);
             });
         }
@@ -734,7 +708,6 @@
                 `${Math.floor(gameState.elapsed / 60)}m ${gameState.elapsed % 60}s`;
             document.getElementById('final-balls').textContent = gameState.totalBalls;
             
-            // Big confetti
             confetti({
                 particleCount: 300,
                 spread: 100,
@@ -758,7 +731,6 @@
 
         function startNewGameFromWin() {
             hideWinModal();
-            // Clear URL state
             const url = new URL(window.location);
             url.searchParams.delete('state');
             window.history.replaceState({}, '', url);
@@ -780,11 +752,6 @@
             }
         }
 
-        function checkForWinnerOnLoad() {
-            // Handled in updateUI
-        }
-
-        // Keyboard shortcuts
         function setupKeyboard() {
             document.addEventListener('keydown', (e) => {
                 if (!gameState) return;
@@ -796,7 +763,6 @@
                 if (e.key === 'u' || e.key === 'U') undoLastAction();
             });
             
-            // Easter egg
             let konami = [];
             const code = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
             document.addEventListener('keyup', (e) => {
@@ -809,30 +775,20 @@
             });
         }
 
-        // Boot the app
         function bootApp() {
             initializeTailwind();
             setupKeyboard();
             
-            // Try to load from URL first
             const loaded = loadFromURL();
             
             if (!loaded) {
-                // Show idle screen by default
                 document.getElementById('idle-screen').classList.remove('hidden');
             }
             
-            // Demo hint for first time
             if (!localStorage.getItem('hasPlayed')) {
-                setTimeout(() => {
-                    if (!gameState && document.getElementById('idle-screen').classList.contains('hidden') === false) {
-                        // Could show a toast but skip for cleanliness
-                    }
-                }, 4200);
                 localStorage.setItem('hasPlayed', 'true');
             }
             
-            // Make sure modals are hidden
             document.getElementById('new-game-modal').classList.add('hidden');
             document.getElementById('win-modal').classList.add('hidden');
         }
