@@ -1,58 +1,51 @@
-# 🎱 Don't Break the BPM
+# BreakBPM
 
-**A fun, real-time(ish) web app for pool & billiards scoring.** Track every shot, measure your **Balls Per Minute (BPM)**, play casual games with up to 4 friends via shareable links, or grind solo practice mode.
+**Pool & billiards scoring with live Balls-Per-Minute (BPM) tracking.**
 
-> *"Don't break the beat... or the rack."*
+From the opening break to the final 8-ball (or 9), measure your pace, log every shot, play casual games with up to 4 friends via instant shareable links, or grind solo practice.
 
-## ✨ Features (MVP)
+> *"BreakBPM — the score that starts at the break and ends when you win."*
 
-- **Multiplayer up to 4 players** – Instant shareable link (URL-encoded state for now; true realtime coming soon)
-- **Shot-by-shot tracking** – Potted ball, Miss, Foul, Safety, Win Rack / 8-Ball
-- **Live Balls-Per-Minute (BPM)** – Global + per-session stats with timer
-- **Practice mode** – Solo drills, high-run tracking, pace training
-- **Game types** – 8-ball, 9-ball, custom race-to-X racks
-- **Beautiful mobile-first UI** – Felt-green theme, big friendly buttons, confetti wins
-- **Zero install** – Works in any browser, PWA-ready
+## ✨ Features
 
-## 🚀 Live Demo
+- **Up to 4 players** – Shareable link with live game state (real-time rooms coming soon)
+- **Shot tracking** – Potted ball, Win Rack, Miss, Foul, Safety
+- **Live BPM** – Balls potted per minute + session timer
+- **Practice mode** – Solo drills & pace training
+- **Game types** – 8-ball, 9-ball, custom race-to-X
+- **Mobile-first UI** – Felt-green theme, big buttons, confetti on wins
+- **Zero friction** – Works in any browser
 
-Open `index.html` directly in your browser (or deploy to GitHub Pages / Vercel). Share the URL after starting a game – the full state travels with it!
+## 🚀 Play Now
 
-## 📁 Project Structure
+Open `index.html` in your browser (or deploy to GitHub Pages). Start a game and share the URL – friends see the exact same scores and BPM instantly.
 
-- `index.html` – The entire playable app (single-file magic with Tailwind + vanilla JS)
-- `README.md` – You're here
+## 📁 What's Inside
 
-## 🔧 Tech Stack & Roadmap
+- `index.html` – Complete playable app (Tailwind + vanilla JS, single file)
+- `README.md` – This file
 
-**Current (v0.1):** Pure HTML + Tailwind CDN + JS (no build step)
+## 🔧 Roadmap
 
-**Next up:**
-- Firebase / Supabase for real-time synced game rooms (join via code, live updates for all players)
-- Persistent history & player profiles
-- Payment integration (Stripe / crypto per-game credits as originally planned)
-- Advanced analytics (shot heatmaps, improvement graphs)
-- Deployed PWA + install prompt
+- Firebase/Supabase real-time multiplayer rooms
+- Player history & stats
+- Stripe/crypto pay-per-game (your original idea)
+- Advanced analytics
+- PWA + offline mode
 
-## 🎯 How to Play (Quick Start)
+## 🎯 Quick Start
 
 1. Open `index.html`
-2. Click **New Game** or **Practice Mode**
-3. Add player names (1–4)
-4. Choose race length & game type
-5. Start shooting! Use the big action buttons
-6. Watch BPM climb in real time
-7. Hit **Share Link** to send to friends – they open it and see the live state
-8. First to the target racks wins → confetti explosion!
+2. New Game or Practice Mode
+3. Add names, pick race length
+4. Shoot! Watch BPM climb
+5. Share the link with your crew
+6. First to the target racks wins → confetti party
 
-## 👨‍💻 Local Development
+## 👨‍💻 Dev
 
-Just open the HTML file. No server needed. For editing, use any text editor + live server extension.
-
-## 🎉 Credits & Vibes
-
-Built live in one session with Grok (xAI) + connected GitHub tools. Inspired by late-night pool hall sessions and the need for something better than chalkboards or group texts.
+Just open the HTML. No build tools needed.
 
 **Repo:** https://github.com/ThatOtherZach/dont-break-the-bpm
 
-*Let's rack 'em up and keep the BPM high.* 🎱
+*BreakBPM — rack 'em up and keep the pace high.* 🎱
