@@ -1,51 +1,29 @@
 # BreakBPM
 
-**A retro Windows 98-style pool & billiards scorer with live Balls-Per-Minute (BPM) tracking.**
+**A retro pool & billiards Balls-Per-Minute (BPM) tracker.**
 
-From the opening break to the final 8-ball — log every shot, watch your pace, play with friends via 4-digit code or shareable link, or grind solo practice.
+From the opening break to the final 8-ball — log every shot, watch your pace, play with friends via 4-digit code, or grind in solo practice.
 
-> *"BreakBPM — the score that starts at the break and ends when you win."*
-
-## Current Version: v0.4 (Windows 98 Edition)
-
-This is a **single-file web app** (`index.html`) that feels like a genuine 1998 Windows program.
+## Current Version: v1.0
 
 ### Key Features
-- **Full Windows 98 UI** — Classic gray 3D windows, navy title bars, inset/outset borders, MS Sans Serif font, teal desktop background.
-- **Simplified ball system** — Balls shown as `(1)(3)(8)(2)` text (no emojis).
-- **Smart ball selector** — Only shows legal/available balls based on game rules and what’s already sunk.
-- **Ball Return terminal** — Green-on-black readout showing sunk balls in chronological order.
-- **8-Ball & 9-Ball support** — Proper win conditions (must clear your group before 8-ball; 9-ball wins on the 9).
-- **Team assignment** — Solids vs Stripes for 8-ball games.
-- **4-digit share code** — Easy-to-say code (e.g. `K7P2`) + full URL with game state.
-- **Live BPM + Timer** — Calculated from actual sunk balls over game duration.
-- **Multiplayer (async)** — Share the link or code; state travels with the URL.
+- **Full Retro UI** — Classic gray 3D windows, navy title bars, inset/outset borders, Sans Serif font, teal felt background. Nice.
+- **Simplified Ball System** — Balls shown as badges with enhanced UI input schema.
+- **Smart Ball Selector** — Only shows legal/available balls based on game rules and what’s already sunk.
+- **Live BPM Timer** — Calculated from actual sunk balls over game duration.
+- **Ball Return Terminal** — Green-on-black readout showing sunk balls in chronological order.
+- **8-Ball & 9-Ball Support** — Proper win conditions (must clear your group before 8-ball; 9-ball wins on the 9).
+- **Auto Team Assignment** — Solids vs Stripes for 8-ball games. Never forget your balls.
 - **Practice Mode** — Solo drills with unlimited racks.
 - **Undo, fouls, safeties, shot log** — Full action history.
-
-## How to Run
-
-Just open `index.html` in any modern browser. No build step, no dependencies.
-
-For best experience:
-- Deploy to GitHub Pages (Settings → Pages → Deploy from `main` branch)
-- Or run locally with Live Server extension in VS Code
-
-## Project Files
-
-- `index.html` — The entire playable app
-- `README.md` — You're here
-- `SCHEMA.md` — Data model for players, games, and actions
-- `CONTRIBUTING.md` — Development guidelines + instructions for future AIs
-- `CHANGELOG.md` — Version history
+- **Share Code** — Easy-to-say code (e.g. `K7P2`) + full URL with game state. (Note: Feature TBD)
+- **Multiplayer** — Share the link or code. (Note: Feature TBD)
 
 ## Data Model (see SCHEMA.md for full details)
 
 - **Players**: Name + optional team (solids/stripes) + stats
 - **Games**: Type (8ball/9ball), short code, status, actions[]
 - **Actions**: Every pot, miss, foul, safety, win (timestamped for accurate BPM)
-
-The current implementation stores everything in-memory and serializes to the URL (`?state=...`) for sharing. Ready to drop into Firebase/Supabase later with zero schema changes.
 
 ## Vision & Goals
 
